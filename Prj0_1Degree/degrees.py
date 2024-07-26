@@ -95,9 +95,37 @@ def shortest_path(source, target):
     sourceNode=Node(source,None,None)
     BFSfinder=QueueFrontier()
     BFSfinder.add(sourceNode)
-    nextNode=BFSfinder.remove()
-    nextNode.parent=sourceNode
-
+    nodeContainer=StackFrontier()
+    visited=[]
+    Finded=0
+    while (not BFSfinder.empty()) and (not Finded):
+        nowNode=BFSfinder.remove()
+        for movieId in people[nowNode.state]["movies"]:
+            for starId in movies[movieId]["stars"]:
+                if not (starId in visited):
+                    newNode=Node(starId,nowNode.state,movieId)
+                    BFSfinder.add(newNode)
+                    visited.append(starId)
+                    nodeContainer.add(newNode)
+                if starId==target :
+                    Finded=1
+                if Finded:
+                    break
+            if Finded:
+                break
+    path=[]
+    nextPathNodeId=target
+    while (not nodeContainer.empty()) and (nextPathNodeId != None):
+        pathNode=nodeContainer.remove()
+        if pathNode.state==nextPathNodeId:
+            if nextPathNodeId!=source: #不知为何，最后一步去掉头节点在check50时有一个检查点会出错
+                path.insert(0,(pathNode.action,pathNode.state))
+            nextPathNodeId=pathNode.parent
+    # path=path[1:]
+    if not Finded:
+        return None
+    else:
+        return path
 
 
 def person_id_for_name(name):
