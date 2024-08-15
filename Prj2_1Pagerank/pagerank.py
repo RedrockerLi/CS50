@@ -57,7 +57,21 @@ def transition_model(corpus, page, damping_factor):
     linked to by `page`. With probability `1 - damping_factor`, choose
     a link at random chosen from all pages in the corpus.
     """
-    raise NotImplementedError
+    propDist = {}
+    dictLen = len(corpus.keys())
+    pagesLen = len(corpus[page])
+    if len(corpus[page]) < 1:
+        for key in corpus.keys():
+            propDist[key] = 1 / dictLen
+    else:
+        random_factor = (1 - damping_factor) / dictLen
+        even_factor = damping_factor / pagesLen
+        for key in corpus.keys():
+            if key not in corpus[page]:
+                propDist[key] = random_factor
+            else:
+                propDist[key] = even_factor + random_factor
+    return propDist
 
 
 def sample_pagerank(corpus, damping_factor, n):
@@ -69,7 +83,23 @@ def sample_pagerank(corpus, damping_factor, n):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    raise NotImplementedError
+
+    samples_dict = corpus.copy()
+    for i in samples_dict:
+        samples_dict[i] = 0
+    sample = random.choice(list(corpus.keys()))
+    for i in range(n-1):
+        dist=transition_model(corpus,sample,damping_factor)
+        dist_lst = list(dist.keys())
+        dist_weights = [dist[i] for i in dist]
+        sample = random.choices(dist_lst, dist_weights, k=1)[0]
+        samples_dict[sample] += 1
+
+    for item in samples_dict:
+        samples_dict[item] /= n
+
+    return samples_dict
+
 
 
 def iterate_pagerank(corpus, damping_factor):
@@ -81,7 +111,31 @@ def iterate_pagerank(corpus, damping_factor):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    raise NotImplementedError
+    pages_number = len(corpus)
+    old_dict = {}
+    new_dict = {}
+    for page in corpus:
+        old_dict[page] = 1 / pages_number
+    while True:
+        for page in corpus:
+            temp = 0
+            for linking_page in corpus:
+                if page in corpus[linking_page]:
+                    temp += (old_dict[linking_page] / len(corpus[linking_page]))
+                if len(corpus[linking_page]) == 0:
+                    temp += (old_dict[linking_page]) / len(corpus)
+            temp *= damping_factor
+            temp += (1 - damping_factor) / pages_number
+
+            new_dict[page] = temp
+
+        difference = max([abs(new_dict[x] - old_dict[x]) for x in old_dict])
+        if difference < 0.001:
+            break
+        else:
+            old_dict = new_dict.copy()
+
+    return old_dict
 
 
 if __name__ == "__main__":
